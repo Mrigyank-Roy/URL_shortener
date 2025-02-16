@@ -2,25 +2,47 @@ import { readFile, writeFile } from 'fs/promises';
 import { createServer } from 'http';
 import crypto from 'crypto';
 import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = 3002;
-const DATA_FILE = path.join("data", "links.json");
+const DATA_FILE = path.join(__dirname, "data", "links.json");
 
-const serverFile = async (res, filePath, contentType) => {
+// Serve static files from the 'public' folder
+const serveStaticFile = async (res, filePath) => {
     try {
-        const data = await readFile(filePath);
-        res.writeHead(200, { "Content-Type": contentType });
-        res.end(data);
+        const ext = path.extname(filePath);
+        const contentType = {
+            ".html": "text/html",
+            ".css": "text/css",
+            ".js": "application/javascript",
+            ".png": "image/png",
+            ".jpg": "image/jpeg",
+            ".ico": "image/x-icon",
+        }[ext] || "text/plain";
+
+        const fullPath = path.join(__dirname, "public", filePath);
+
+        if (fs.existsSync(fullPath)) {
+            const data = await readFile(fullPath);
+            res.writeHead(200, { "Content-Type": contentType });
+            res.end(data);
+        } else {
+            res.writeHead(404, { "Content-Type": "text/plain" });
+            res.end("404 Not Found");
+        }
     } catch (error) {
-        res.writeHead(404, { "Content-Type": "text/plain" });
-        res.end("Error 404: Page Not Found");
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Internal Server Error");
     }
 };
 
+// Load links from JSON file
 const loadLinks = async () => {
     try {
         const data = await readFile(DATA_FILE, 'utf-8');
-        return JSON.parse(data);
+        return data ? JSON.parse(data) : {};
     } catch (error) {
         if (error.code === "ENOENT") {
             await writeFile(DATA_FILE, JSON.stringify({}));
@@ -30,22 +52,43 @@ const loadLinks = async () => {
     }
 };
 
+// Save links to JSON file
 const saveLinks = async (links) => {
     await writeFile(DATA_FILE, JSON.stringify(links, null, 2));
 };
 
+// Create HTTP server
 const server = createServer(async (req, res) => {
-    // GET Requests
+    const urlPath = req.url.split("?")[0]; // Ignore query parameters
+
     if (req.method === "GET") {
-        if (req.url === "/") {
-            return serverFile(res, path.join("public", "index.html"), "text/html");
-        } else if (req.url === "/style.css") {
-            return serverFile(res, path.join("public", "style.css"), "text/css");
+        // Serve the main HTML page
+        if (urlPath === "/") {
+            return serveStaticFile(res, "index.html");
+        } 
+
+        // Serve static files from the 'public' folder
+        const staticFileExtensions = [".css", ".js", ".png", ".jpg", ".ico"];
+        if (staticFileExtensions.some(ext => urlPath.endsWith(ext))) {
+            return serveStaticFile(res, urlPath.substring(1)); // Remove leading '/'
         }
+
+        // Handle redirection for shortened URLs
+        const links = await loadLinks();
+        const shortCode = urlPath.substring(1);
+
+        if (links[shortCode]) {
+            res.writeHead(302, { Location: links[shortCode] });
+            return res.end();
+        }
+
+        // If not found, return 404
+        res.writeHead(404, { "Content-Type": "text/plain" });
+        return res.end("404 Not Found");
     }
 
-    // POST Request to Shorten URL
-    if (req.method === "POST" && req.url === "/shorten") {
+    // Handle URL shortening
+    if (req.method === "POST" && urlPath === "/shorten") {
         const links = await loadLinks();
 
         let body = "";
@@ -55,7 +98,6 @@ const server = createServer(async (req, res) => {
 
         req.on("end", async () => {
             try {
-                console.log(body);
                 const { url, shortCode } = JSON.parse(body);
 
                 if (!url) {
@@ -84,6 +126,7 @@ const server = createServer(async (req, res) => {
     }
 });
 
+// Start server
 server.listen(PORT, () => {
     console.log(`Server is running at: http://localhost:${PORT}`);
 });
