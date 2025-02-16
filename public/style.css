@@ -1,0 +1,85 @@
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to right, #FFF3CD, #FFD8A8);
+    color: #333;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+}
+
+.container {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.15);
+    text-align: center;
+    width: 400px;
+    max-width: 90%;
+    box-sizing: border-box;
+}
+
+h1 {
+    color: #E67E22;
+    margin-bottom: 30px;
+    font-size: 36px;
+}
+
+h2 {
+    color: #E67E22;
+    margin-bottom: 25px;
+    font-size: 28px;
+}
+
+.input-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 8px;
+    color: #D35400;
+    font-size: 18px;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border: 2px solid #F4A261;
+    border-radius: 8px;
+    background: #FFF5E1;
+    font-size: 18px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* A soft, modern font */
+    color: #6A4E23; /* Earthy brown color to match the theme */
+    box-sizing: border-box;
+    transition: all 0.3s ease-in-out;
+}
+
+input:focus {
+    outline: none;
+    border-color: #E67E22;
+    background: #FFEDD5;
+    box-shadow: 0px 0px 8px rgba(230, 126, 34, 0.4);
+}
+
+button {
+    background: #E67E22;
+    color: white;
+    border: none;
+    padding: 12px 18px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    width: 100%;
+    max-width: 200px;
+    margin-top: 30px;
+}
+
+button:hover {
+    background: #D35400;
+}

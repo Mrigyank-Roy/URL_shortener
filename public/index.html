@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Shortener</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>URL Shortener</h1>
+        <form id="Shorten-form">
+            <div class="input-group">
+                <label for="url">Enter URL</label>
+                <input type="url" name="url" id="url" required>
+            </div>
+            <div class="input-group">
+                <label for="shortCode">Enter Short Code (optional)</label>
+                <input type="text" name="shortCode" id="shortCode">
+            </div>
+            <button type="submit">SUBMIT</button>
+        </form>
+
+        <h2>Shortened URL</h2>
+        <p id="shortened-link"></p>
+    </div>
+
+    <script>
+        document.getElementById("Shorten-form").addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            const url = formData.get("url");
+            const shortCode = formData.get("shortCode").trim();
+
+            console.log(url, shortCode);
+
+            try {
+                const requestBody = { url };
+                if (shortCode) requestBody.shortCode = shortCode;  
+
+                const response = await fetch("/shorten", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },  
+                    body: JSON.stringify(requestBody),
+                });
+
+                if (response.ok) {
+                    const data = await response.json();  
+                    document.getElementById("shortened-link").innerHTML = 
+                        `Shortened URL: <a href="/${data.shortCode}" target="_blank">${window.location.origin}/${data.shortCode}</a>`;
+                } else {
+                    const errorMessage = await response.text();
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+            }
+        });
+    </script>
+</body>
+</html>
